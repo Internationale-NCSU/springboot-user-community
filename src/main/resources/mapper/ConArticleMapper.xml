@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dareway.jc.content.community.mapper.ConArticleMapper">
+
+    <select id="selectNicknameAndProfileByUserId" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT nickname, photo_url
+        FROM unicornaged.user_info
+        where userid = #{userId}
+    </select>
+
+    <select id="selectUserInfoAndArt" resultType="com.dareway.jc.content.community.domain.ConArticle">
+        <where>
+            <if test="params.id != null">
+                XX = #{params.id}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectPagingHomePageContent" resultType="com.dareway.jc.content.community.pojo.Article.ArticlePage">
+        select ca.title,ca.read_number,
+        ca.id,ui.nickname,ui.photo_url as photoUrl,ca.cover_url as coverImageUrl,ca.create_date,ca.is_web_url
+
+             <if test= ' type=="2"'>
+                   ,ca.video_urls as videoUrls
+               </if>
+               <if test = ' type == "3" '>
+                   ,ca.content
+               </if>
+               <if test = ' type == "4" '>
+                   ,ca.content
+                   ,ca.video_url as videoUrl
+                   ,ui.userid as userId
+               </if>
+               <if test=' countyCode!=null and countyCode!="" '>
+                    ,ca.county_code as countyCode
+               </if>
+        from con_article ca
+        left join unicornaged.user_info ui on ui.userid = ca.creator
+        left join con_topic ct on ca.topic_id = ct.topic_id
+        <where>
+            and ca.delete_flag = '0'
+            and ca.draft_status = '0'
+            <if test=' type !=null and type!="" '>
+                and ca.type = #{type}
+            </if>
+            <if test=' type==null or type=="" '>
+                and ca.type!= '3'
+            </if>
+            <if test=' countyCode!=null and countyCode!="" '>
+                and ca.county_code = #{countyCode}
+            </if>
+        </where>
+        order by ca.create_date desc
+    </select>
+
+    <select id="selectPagingOriginalArticle" resultType="com.dareway.jc.content.community.pojo.Article.ArticlePage">
+        select ca.title,ca.read_number,
+        ca.id,ui.nickname,ui.photo_url as photoUrl,ca.cover_url as coverImageUrl,ca.is_web_url
+        from unicornaged_content.con_article ca
+        left join unicornaged.user_info ui on ui.userid = ca.creator
+        left join unicornaged_content.con_topic ct on ca.topic_id = ct.topic_id
+        <where>
+            and ca.delete_flag = '0'
+            and ca.draft_status = '0'
+            and ca.creator = #{userId}
+        </where>
+        order by ca.read_number desc
+    </select>
+
+    <select id="selectTopicIdsAndTitles" parameterType="java.lang.Long"
+            resultType="com.dareway.jc.content.community.pojo.Topic.TitlesAndTopicId">
+        SELECT atr.topic_id as topicId, ct.title as title
+        FROM unicornaged_content.con_article_topic_ref atr
+                 left join unicornaged_content.con_topic ct on atr.topic_id = ct.topic_id
+        where article_id = #{articleId}
+    </select>
+
+    <select id="selectArticleFromOldDataSrc" resultType="com.dareway.jc.content.community.pojo.Article.OldArticle">
+        SELECT ha.articletitle as title ,
+        ha.subtitle,addtime as createDate,
+        ha.updatetime as updateDate,
+        ha.articlecontent as bolbdata,
+        ha.content_url as content,
+        ha.thumbnail_url as coverUrl,
+        ac.channelid as channelId
+        FROM unicornaged.health_article ha,unicornaged.article_config ac
+        <where>
+            and ha.articleid = ac.articleid
+        </where>
+    </select>
+
+    <select id="selectAllTopicByArticleId" resultType="com.dareway.jc.content.community.domain.ConTopic">
+        SELECT ct.*
+        FROM unicornaged_content.con_article_topic_ref atr
+                 LEFT JOIN unicornaged_content.con_topic ct ON atr.topic_id = ct.topic_id
+        WHERE atr.article_id = #{articleId}
+    </select>
+
+    <select id="selectVideoUrlsById" resultType="java.lang.String">
+        SELECT video_urls
+        FROM con_article
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectArticlesByCondition" resultType="com.dareway.jc.content.community.pojo.Management.SearchArticlePage">
+        select ca.id,ca.create_date,ca.update_time as updateDate,ca.creator,ui.nickname,ui.xm as realName,
+               ca.like_number,ca.read_number,ca.comment_number,ca.title,ca.type,ca.draft_status,ca.delete_flag
+        from unicornaged_content.con_article ca
+        left join unicornaged.user_info ui on ca.creator = ui.userid
+        <where>
+            <if test="para.userId != null and para.userId!= '' ">
+                and ca.creator = #{para.userId}
+            </if>
+            <if test="para.createDateStart != null and para.createDateStart!= '' ">
+                and create_date &gt; to_date(#{para.createDateStart}, 'yyyy-MM-dd hh24:mi:ss')
+            </if>
+            <if test="para.createDateEnd != null and para.createDateEnd!= '' ">
+                and create_date &lt; to_date(#{para.createDateEnd}, 'yyyy-MM-dd hh24:mi:ss')
+            </if>
+            <if test="para.updateDateStart != null and para.updateDateStart!= '' ">
+                and update_time &gt; to_date( #{para.updateDateStart}, 'yyyy-MM-dd hh24:mi:ss')
+            </if>
+            <if test="para.createDateEnd != null and para.createDateEnd!= '' ">
+                and update_time &lt; to_date(#{para.updateDateEnd}, 'yyyy-MM-dd hh24:mi:ss')
+            </if>
+            <if test="para.nickname != null and para.nickname!= '' ">
+                and ui.nickname = #{para.nickname}
+            </if>
+            <if test="para.likeNumber != null and para.likeNumber!= '' ">
+                and ca.like_number >= #{para.likeNumber}
+            </if>
+            <if test="para.commentNumber != null and para.commentNumber!= '' ">
+                and ca.comment_number >= #{para.commentNumber}
+            </if>
+            <if test="para.deleteFlag != null and para.deleteFlag!= '' ">
+                and ca.delete_flag = #{para.deleteFlag}
+            </if>
+            <if test="para.type != null and para.type!= '' ">
+                and ca.type = #{para.type}
+            </if>
+            <if test="para.draftStatus != null and para.draftStatus!= '' ">
+                and ca.draft_status = #{para.draftStatus}
+            </if>
+            <if test="para.title != null and para.title!= '' ">
+                and title like #{para.title}
+            </if>
+        </where>
+    </select>
+
+</mapper>

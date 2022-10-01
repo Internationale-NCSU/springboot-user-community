@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dareway.jc.content.community.mapper.ConTopicMapper">
+
+    <select id="selectArticlesUnderCurrentTopic" resultType="com.dareway.jc.content.community.domain.ConArticle">
+        SELECT ca.id, ca.cover_url, ca.title, ca.read_number
+        FROM unicornaged_content.con_article_topic_ref atr
+                 left join unicornaged_content.con_article ca on atr.article_id = ca.id
+                 left join unicornaged_content.con_topic ct on atr.topic_id = ct.topic_id
+        WHERE atr.topic_id = #{topicId}
+          and ca.delete_flag = '0'
+          and ca.draft_status = '0'
+          and ca.type !='3'
+        ORDER BY read_number DESC LIMIT 2
+    </select>
+
+    <select id="selectPagingAllArticlesUnderCurrentTopic" resultType="com.dareway.jc.content.community.domain.ConArticle">
+        select ca.*
+        from unicornaged_content.con_article_topic_ref atr
+                 left join unicornaged_content.con_article ca on atr.article_id = ca.id
+                 left join unicornaged_content.con_topic ct on atr.topic_id = ct.topic_id
+        where atr.topic_id = #{para}
+          and ca.delete_flag = '0'
+          and ca.draft_status = '0'
+    </select>
+
+    <select id="selectAllArticlesUnderCurrentTopic" resultType="java.lang.Integer">
+        select sum(ca.read_number)
+        from unicornaged_content.con_article_topic_ref atr
+                 left join unicornaged_content.con_article ca on atr.article_id = ca.id
+                 left join unicornaged_content.con_topic ct on atr.topic_id = ct.topic_id
+        where atr.topic_id = #{para}
+          and ca.delete_flag = '0'
+          and ca.draft_status = '0'
+    </select>
+
+</mapper>

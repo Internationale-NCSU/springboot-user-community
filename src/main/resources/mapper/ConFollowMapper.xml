@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dareway.jc.content.community.mapper.ConFollowMapper">
+
+    <select id="selectUserArticleTotalLikeNums" resultType="java.lang.Integer">
+        SELECT sum(ca.like_number)
+        FROM unicornaged_content.con_article ca
+        WHERE ca.creator = #{userId}
+          AND ca.delete_flag = '0'
+    </select>
+
+    <select id="selectUserCommentTotalLikeNums" resultType="java.lang.Integer">
+        SELECT sum(cm.like_number)
+        FROM unicornaged_content.con_comment cm
+        WHERE cm.creator = #{userId}
+          AND cm.delete_flag = '0'
+    </select>
+
+</mapper>
